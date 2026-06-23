@@ -1,0 +1,749 @@
+{
+  "info": {
+    "name": "Nexus Platform API",
+    "description": "Complete API collection for Nexus Investor-Entrepreneur Collaboration Platform\n\n## Features\n- JWT Authentication with 2FA/OTP\n- Real-time Chat & Video Calling\n- Meeting Scheduling with Conflict Detection\n- Document Management with E-Signature\n- Mock Payment System\n\n## Setup Instructions\n1. Import this collection into Postman\n2. Set the `base_url` variable to your server URL (default: http://localhost:5000)\n3. Register a new user or login\n4. The JWT token will be automatically set in the `token` variable\n5. All authenticated requests will use this token automatically\n\n## Variables\n- `base_url`: API base URL (http://localhost:5000)\n- `token`: JWT token (auto-set after login)\n- `user_id`: Current user ID (auto-set after login)\n- `other_user_id`: Another user's ID for testing\n- `meeting_id`: Meeting ID for testing\n- `document_id`: Document ID for testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "nexus-platform"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "other_user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "meeting_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "document_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('token', response.token);",
+                  "    pm.environment.set('user_id', response._id);",
+                  "    pm.test('Registration successful', () => {",
+                  "        pm.expect(response).to.have.property('token');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Entrepreneur\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"entrepreneur\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Register a new user account. Role can be 'entrepreneur' or 'investor'."
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('token', response.token);",
+                  "    pm.environment.set('user_id', response._id);",
+                  "    pm.test('Login successful', () => {",
+                  "        pm.expect(response).to.have.property('token');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login with email and password. Returns JWT token."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Get authenticated user's profile data"
+          },
+          "response": []
+        },
+        {
+          "name": "Send OTP (2FA)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/send-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "send-otp"]
+            },
+            "description": "Generate and send 6-digit OTP for 2FA (mock email)"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify-otp"]
+            },
+            "description": "Verify the 6-digit OTP code"
+          },
+          "response": []
+        },
+        {
+          "name": "Get 2FA Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/2fa-status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "2fa-status"]
+            },
+            "description": "Check if 2FA is enabled for current user"
+          },
+          "response": []
+        },
+        {
+          "name": "Disable 2FA",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/disable-2fa",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "disable-2fa"]
+            },
+            "description": "Turn off two-factor authentication"
+          },
+          "response": []
+        }
+      ],
+      "description": "User authentication and 2FA operations"
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users?role=investor",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users"],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "investor",
+                  "description": "Filter by role: entrepreneur or investor"
+                },
+                {
+                  "key": "industry",
+                  "value": "Technology",
+                  "disabled": true,
+                  "description": "Filter by industry (entrepreneur only)"
+                }
+              ]
+            },
+            "description": "Browse and discover users with optional filters"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{other_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{other_user_id}}"]
+            },
+            "description": "Get specific user's public profile"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Own Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe Updated\",\n  \"bio\": \"Experienced entrepreneur in fintech\",\n  \"entrepreneurProfile\": {\n    \"companyName\": \"TechStartup Inc\",\n    \"industry\": \"Technology\",\n    \"stage\": \"Series A\",\n    \"fundingGoal\": 500000,\n    \"pitchDeck\": \"https://example.com/pitch.pdf\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "profile"]
+            },
+            "description": "Update authenticated user's profile"
+          },
+          "response": []
+        }
+      ],
+      "description": "User profile and discovery operations"
+    },
+    {
+      "name": "Meetings",
+      "item": [
+        {
+          "name": "Get All Meetings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/meetings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meetings"]
+            },
+            "description": "Get all meetings where user is host or guest"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Meeting",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('meeting_id', response._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Investment Discussion\",\n  \"description\": \"Discuss Series A funding opportunities\",\n  \"startTime\": \"2026-06-25T10:00:00Z\",\n  \"endTime\": \"2026-06-25T11:00:00Z\",\n  \"guestId\": \"{{other_user_id}}\",\n  \"meetingLink\": \"https://meet.nexus.com/xyz123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/meetings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meetings"]
+            },
+            "description": "Schedule a new meeting with conflict detection"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Meeting By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/meetings/{{meeting_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meetings", "{{meeting_id}}"]
+            },
+            "description": "Retrieve specific meeting details"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Meeting",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\",\n  \"title\": \"Investment Discussion - Updated\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/meetings/{{meeting_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meetings", "{{meeting_id}}"]
+            },
+            "description": "Update meeting details or status"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Meeting",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/meetings/{{meeting_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meetings", "{{meeting_id}}"]
+            },
+            "description": "Cancel and delete a meeting"
+          },
+          "response": []
+        }
+      ],
+      "description": "Meeting scheduling and management"
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/messages/unread/count",
+              "host": ["{{base_url}}"],
+              "path": ["api", "messages", "unread", "count"]
+            },
+            "description": "Get total number of unread messages"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Conversation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/messages/{{other_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "messages", "{{other_user_id}}"]
+            },
+            "description": "Get message history with specific user"
+          },
+          "response": []
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverId\": \"{{other_user_id}}\",\n  \"content\": \"Hello! I'm interested in discussing your startup.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/messages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "messages"]
+            },
+            "description": "Send a new message to another user"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Messages As Read",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/messages/read/{{other_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "messages", "read", "{{other_user_id}}"]
+            },
+            "description": "Mark all messages from a user as read"
+          },
+          "response": []
+        }
+      ],
+      "description": "Real-time messaging operations"
+    },
+    {
+      "name": "Documents",
+      "item": [
+        {
+          "name": "Upload Document",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('document_id', response._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select a file to upload (PDF, DOCX, images)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/documents/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents", "upload"]
+            },
+            "description": "Upload a new document (max 10MB)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/documents",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents"]
+            },
+            "description": "Get all documents for authenticated user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Document By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/documents/{{document_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents", "{{document_id}}"]
+            },
+            "description": "Retrieve document metadata"
+          },
+          "response": []
+        },
+        {
+          "name": "Download Document",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/documents/{{document_id}}/download",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents", "{{document_id}}", "download"]
+            },
+            "description": "Download document file"
+          },
+          "response": []
+        },
+        {
+          "name": "Sign Document",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "signature",
+                  "type": "file",
+                  "src": [],
+                  "description": "Upload signature image"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/documents/{{document_id}}/sign",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents", "{{document_id}}", "sign"]
+            },
+            "description": "Upload signature for document"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Document",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileName\": \"Updated Document Name\",\n  \"sharedWith\": [\"{{other_user_id}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/documents/{{document_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents", "{{document_id}}"]
+            },
+            "description": "Update document metadata"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Document",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/documents/{{document_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents", "{{document_id}}"]
+            },
+            "description": "Permanently delete a document"
+          },
+          "response": []
+        }
+      ],
+      "description": "Document management and e-signature"
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Deposit Funds",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1000.00,\n  \"description\": \"Initial deposit to wallet\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/deposit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "deposit"]
+            },
+            "description": "Add funds to wallet (mock transaction)"
+          },
+          "response": []
+        },
+        {
+          "name": "Withdraw Funds",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 500.00,\n  \"description\": \"Withdrawal to bank account\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/withdraw",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "withdraw"]
+            },
+            "description": "Remove funds from wallet (mock transaction)"
+          },
+          "response": []
+        },
+        {
+          "name": "Transfer Funds",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientId\": \"{{other_user_id}}\",\n  \"amount\": 250.00,\n  \"description\": \"Investment payment\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/transfer",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "transfer"]
+            },
+            "description": "Transfer funds to another user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transaction History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/history",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "history"]
+            },
+            "description": "Get all transactions for authenticated user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Wallet Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/balance",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "balance"]
+            },
+            "description": "Get current wallet balance"
+          },
+          "response": []
+        }
+      ],
+      "description": "Mock payment system operations"
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "health"]
+            },
+            "description": "Check if server and database are running"
+          },
+          "response": []
+        }
+      ],
+      "description": "System health and status"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"^backend/[^/]+$|^backend/[^/]+/[^/]+$\")",
+      "Bash(node server.js)",
+      "Bash(netstat -ano)",
+      "Bash(powershell Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess *)",
+      "Bash(taskkill *)",
+      "Bash(curl *)",
+      "Bash(node -e \"import\\('./models/Message.js'\\).then\\(m => console.log\\('Message model syntax: OK'\\)\\).catch\\(e => console.error\\('SYNTAX ERROR:', e.message\\)\\)\")",
+      "Bash(pkill *)",
+      "Bash(npm run *)",
+      "Bash(npm list *)",
+      "Bash(npm install *)",
+      "Bash(timeout 5 node -c server.js)",
+      "Bash(node --check server.js)",
+      "Bash(timeout 3 npm start)",
+      "Bash(node --check controllers/*.js)",
+      "Bash(findstr \":5000\")",
+      "Bash(findstr \"LISTENING\")",
+      "Bash(timeout 30 npm start)",
+      "Bash(findstr \":5173\")",
+      "Bash(xargs grep -l \"connectSocket\\\\|io\\(\")",
+      "Bash(grep -v \"import\\\\|export\\\\|//\")"
+    ]
+  }
+}

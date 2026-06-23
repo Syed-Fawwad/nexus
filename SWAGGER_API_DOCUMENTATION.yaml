@@ -1,0 +1,1166 @@
+openapi: 3.0.3
+info:
+  title: Nexus Platform API
+  description: |
+    Complete API documentation for the Nexus Investor-Entrepreneur Collaboration Platform.
+
+    ## Features
+    - JWT-based authentication with 2FA/OTP support
+    - Real-time chat via Socket.IO
+    - Video calling via WebRTC
+    - Meeting scheduling with conflict detection
+    - Document management with e-signature
+    - Mock payment system
+
+    ## Authentication
+    Most endpoints require a JWT token. Include it in the Authorization header:
+    ```
+    Authorization: Bearer <your_jwt_token>
+    ```
+
+    ## Base URL
+    - Development: http://localhost:5000
+    - Production: https://your-domain.com
+
+  version: 1.0.0
+  contact:
+    name: Nexus Platform
+    url: https://github.com/Syed-Fawwad/nexus
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+  - url: https://api.nexus-platform.com
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and 2FA operations
+  - name: Users
+    description: User profile and discovery operations
+  - name: Meetings
+    description: Meeting scheduling and management
+  - name: Messages
+    description: Real-time messaging operations
+  - name: Documents
+    description: Document upload, management, and e-signature
+  - name: Payments
+    description: Mock payment system operations
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        role:
+          type: string
+          enum: [entrepreneur, investor]
+          example: "entrepreneur"
+        avatarUrl:
+          type: string
+          example: "https://example.com/avatar.jpg"
+        bio:
+          type: string
+          example: "Startup founder in fintech"
+        isOnline:
+          type: boolean
+          example: true
+        walletBalance:
+          type: number
+          example: 1000.00
+        twoFactorEnabled:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+
+    EntrepreneurProfile:
+      type: object
+      properties:
+        companyName:
+          type: string
+          example: "TechStartup Inc"
+        industry:
+          type: string
+          example: "Technology"
+        stage:
+          type: string
+          example: "Series A"
+        fundingGoal:
+          type: number
+          example: 500000
+        pitchDeck:
+          type: string
+          example: "https://example.com/pitch.pdf"
+
+    InvestorProfile:
+      type: object
+      properties:
+        investmentRange:
+          type: string
+          example: "$100K - $500K"
+        industries:
+          type: array
+          items:
+            type: string
+          example: ["Technology", "Healthcare"]
+        portfolio:
+          type: array
+          items:
+            type: string
+          example: ["Company A", "Company B"]
+
+    Meeting:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+          example: "Investment Discussion"
+        description:
+          type: string
+          example: "Discuss Series A funding"
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        host:
+          $ref: '#/components/schemas/User'
+        guest:
+          $ref: '#/components/schemas/User'
+        status:
+          type: string
+          enum: [pending, accepted, rejected, cancelled]
+          example: "pending"
+        meetingLink:
+          type: string
+          example: "https://meet.nexus.com/xyz123"
+        createdAt:
+          type: string
+          format: date-time
+
+    Message:
+      type: object
+      properties:
+        _id:
+          type: string
+        sender:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        receiver:
+          type: string
+          example: "507f1f77bcf86cd799439012"
+        content:
+          type: string
+          example: "Hello, interested in your startup!"
+        isRead:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+
+    Document:
+      type: object
+      properties:
+        _id:
+          type: string
+        user:
+          type: string
+        fileName:
+          type: string
+          example: "term-sheet.pdf"
+        fileType:
+          type: string
+          example: "application/pdf"
+        fileSize:
+          type: number
+          example: 1048576
+        filePath:
+          type: string
+          example: "/uploads/documents/abc123.pdf"
+        sharedWith:
+          type: array
+          items:
+            type: string
+        signatures:
+          type: array
+          items:
+            type: object
+            properties:
+              userId:
+                type: string
+              signatureImage:
+                type: string
+              signedAt:
+                type: string
+                format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    Transaction:
+      type: object
+      properties:
+        _id:
+          type: string
+        user:
+          type: string
+        type:
+          type: string
+          enum: [deposit, withdraw, transfer]
+          example: "deposit"
+        amount:
+          type: number
+          example: 1000.00
+        status:
+          type: string
+          enum: [pending, completed, failed]
+          example: "completed"
+        recipient:
+          type: string
+          description: "Only for transfer type"
+        description:
+          type: string
+          example: "Deposit to wallet"
+        createdAt:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        stack:
+          type: string
+          description: "Only in development mode"
+
+paths:
+  # ============================================================
+  # AUTHENTICATION ENDPOINTS
+  # ============================================================
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      description: Create a new user account with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+                - role
+              properties:
+                name:
+                  type: string
+                  example: "John Doe"
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  format: password
+                  minLength: 6
+                  example: "password123"
+                role:
+                  type: string
+                  enum: [entrepreneur, investor]
+                  example: "entrepreneur"
+      responses:
+        201:
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  name:
+                    type: string
+                  email:
+                    type: string
+                  role:
+                    type: string
+                  token:
+                    type: string
+        400:
+          description: Invalid input or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and return JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "password123"
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  name:
+                    type: string
+                  email:
+                    type: string
+                  role:
+                    type: string
+                  token:
+                    type: string
+        401:
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user profile
+      description: Retrieve authenticated user's profile data
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: User profile data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          description: Unauthorized - Invalid or missing token
+
+  /api/auth/send-otp:
+    post:
+      tags:
+        - Authentication
+      summary: Send OTP for 2FA
+      description: Generate and send 6-digit OTP to user (mock email)
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "OTP sent successfully"
+                  expiresAt:
+                    type: string
+                    format: date-time
+        429:
+          description: Too many OTP requests
+
+  /api/auth/verify-otp:
+    post:
+      tags:
+        - Authentication
+      summary: Verify OTP code
+      description: Validate the 6-digit OTP code
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - otp
+              properties:
+                otp:
+                  type: string
+                  pattern: '^\d{6}$'
+                  example: "123456"
+      responses:
+        200:
+          description: OTP verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "OTP verified successfully"
+                  twoFactorEnabled:
+                    type: boolean
+        400:
+          description: Invalid or expired OTP
+
+  /api/auth/disable-2fa:
+    post:
+      tags:
+        - Authentication
+      summary: Disable 2FA
+      description: Turn off two-factor authentication
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: 2FA disabled successfully
+
+  /api/auth/2fa-status:
+    get:
+      tags:
+        - Authentication
+      summary: Get 2FA status
+      description: Check if 2FA is enabled for current user
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: 2FA status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  twoFactorEnabled:
+                    type: boolean
+
+  # ============================================================
+  # USER ENDPOINTS
+  # ============================================================
+  /api/users:
+    get:
+      tags:
+        - Users
+      summary: List all users
+      description: Browse and discover entrepreneurs/investors with optional filters
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [entrepreneur, investor]
+          description: Filter by user role
+        - in: query
+          name: industry
+          schema:
+            type: string
+          description: Filter by industry (entrepreneur only)
+      responses:
+        200:
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /api/users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user by ID
+      description: Retrieve specific user's public profile
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID
+      responses:
+        200:
+          description: User profile data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404:
+          description: User not found
+
+  /api/users/profile:
+    put:
+      tags:
+        - Users
+      summary: Update own profile
+      description: Update authenticated user's profile information
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                bio:
+                  type: string
+                avatarUrl:
+                  type: string
+                entrepreneurProfile:
+                  $ref: '#/components/schemas/EntrepreneurProfile'
+                investorProfile:
+                  $ref: '#/components/schemas/InvestorProfile'
+      responses:
+        200:
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # ============================================================
+  # MEETING ENDPOINTS
+  # ============================================================
+  /api/meetings:
+    get:
+      tags:
+        - Meetings
+      summary: Get all meetings
+      description: List all meetings where user is host or guest
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: List of meetings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Meeting'
+
+    post:
+      tags:
+        - Meetings
+      summary: Create meeting
+      description: Schedule a new meeting with conflict detection
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - startTime
+                - endTime
+                - guestId
+              properties:
+                title:
+                  type: string
+                  example: "Investment Discussion"
+                description:
+                  type: string
+                  example: "Discuss funding opportunities"
+                startTime:
+                  type: string
+                  format: date-time
+                  example: "2026-06-25T10:00:00Z"
+                endTime:
+                  type: string
+                  format: date-time
+                  example: "2026-06-25T11:00:00Z"
+                guestId:
+                  type: string
+                  example: "507f1f77bcf86cd799439012"
+                meetingLink:
+                  type: string
+                  example: "https://meet.nexus.com/xyz123"
+      responses:
+        201:
+          description: Meeting created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meeting'
+        409:
+          description: Meeting conflict - time slot overlap detected
+
+  /api/meetings/{id}:
+    get:
+      tags:
+        - Meetings
+      summary: Get meeting by ID
+      description: Retrieve specific meeting details
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Meeting details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meeting'
+        404:
+          description: Meeting not found
+
+    put:
+      tags:
+        - Meetings
+      summary: Update meeting
+      description: Update meeting details or status
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                startTime:
+                  type: string
+                  format: date-time
+                endTime:
+                  type: string
+                  format: date-time
+                status:
+                  type: string
+                  enum: [pending, accepted, rejected, cancelled]
+      responses:
+        200:
+          description: Meeting updated successfully
+        409:
+          description: Meeting conflict detected
+
+    delete:
+      tags:
+        - Meetings
+      summary: Delete meeting
+      description: Cancel and delete a meeting
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Meeting deleted successfully
+        404:
+          description: Meeting not found
+
+  # ============================================================
+  # MESSAGE ENDPOINTS
+  # ============================================================
+  /api/messages/unread/count:
+    get:
+      tags:
+        - Messages
+      summary: Get unread message count
+      description: Get total number of unread messages
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Unread count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    example: 5
+
+  /api/messages/{userId}:
+    get:
+      tags:
+        - Messages
+      summary: Get conversation
+      description: Get message history with specific user
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+          description: Other user's ID
+      responses:
+        200:
+          description: Message history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+
+  /api/messages:
+    post:
+      tags:
+        - Messages
+      summary: Send message
+      description: Send a new message to another user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - receiverId
+                - content
+              properties:
+                receiverId:
+                  type: string
+                  example: "507f1f77bcf86cd799439012"
+                content:
+                  type: string
+                  example: "Hello! Interested in your startup."
+      responses:
+        201:
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+
+  /api/messages/read/{userId}:
+    put:
+      tags:
+        - Messages
+      summary: Mark messages as read
+      description: Mark all messages from a user as read
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Messages marked as read
+
+  # ============================================================
+  # DOCUMENT ENDPOINTS
+  # ============================================================
+  /api/documents/upload:
+    post:
+      tags:
+        - Documents
+      summary: Upload document
+      description: Upload a new document (PDF, DOCX, images)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        201:
+          description: Document uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        400:
+          description: Invalid file type or size
+
+  /api/documents:
+    get:
+      tags:
+        - Documents
+      summary: List documents
+      description: Get all documents for authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+
+  /api/documents/{id}:
+    get:
+      tags:
+        - Documents
+      summary: Get document by ID
+      description: Retrieve document metadata
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Document metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        404:
+          description: Document not found
+
+    put:
+      tags:
+        - Documents
+      summary: Update document
+      description: Update document metadata or sharing settings
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fileName:
+                  type: string
+                sharedWith:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        200:
+          description: Document updated successfully
+
+    delete:
+      tags:
+        - Documents
+      summary: Delete document
+      description: Permanently delete a document
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Document deleted successfully
+        404:
+          description: Document not found
+
+  /api/documents/{id}/download:
+    get:
+      tags:
+        - Documents
+      summary: Download document
+      description: Download document file
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Document file stream
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        404:
+          description: Document not found
+
+  /api/documents/{id}/sign:
+    post:
+      tags:
+        - Documents
+      summary: Sign document
+      description: Upload signature image for document
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - signature
+              properties:
+                signature:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: Document signed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+
+  # ============================================================
+  # PAYMENT ENDPOINTS
+  # ============================================================
+  /api/payments/deposit:
+    post:
+      tags:
+        - Payments
+      summary: Deposit funds
+      description: Add funds to wallet (mock transaction)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+              properties:
+                amount:
+                  type: number
+                  minimum: 0.01
+                  example: 1000.00
+                description:
+                  type: string
+                  example: "Initial deposit"
+      responses:
+        200:
+          description: Deposit successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        400:
+          description: Invalid amount
+
+  /api/payments/withdraw:
+    post:
+      tags:
+        - Payments
+      summary: Withdraw funds
+      description: Remove funds from wallet (mock transaction)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+              properties:
+                amount:
+                  type: number
+                  minimum: 0.01
+                  example: 500.00
+                description:
+                  type: string
+                  example: "Withdrawal to bank"
+      responses:
+        200:
+          description: Withdrawal successful
+        400:
+          description: Insufficient balance
+
+  /api/payments/transfer:
+    post:
+      tags:
+        - Payments
+      summary: Transfer funds
+      description: Transfer funds to another user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - recipientId
+                - amount
+              properties:
+                recipientId:
+                  type: string
+                  example: "507f1f77bcf86cd799439012"
+                amount:
+                  type: number
+                  minimum: 0.01
+                  example: 250.00
+                description:
+                  type: string
+                  example: "Investment payment"
+      responses:
+        200:
+          description: Transfer successful
+        400:
+          description: Insufficient balance or invalid recipient
+
+  /api/payments/history:
+    get:
+      tags:
+        - Payments
+      summary: Get transaction history
+      description: Get all transactions for authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Transaction history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+  /api/payments/balance:
+    get:
+      tags:
+        - Payments
+      summary: Get wallet balance
+      description: Get current wallet balance
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Wallet balance
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: number
+                    example: 1750.00
+
+  # ============================================================
+  # HEALTH CHECK
+  # ============================================================
+  /api/health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      description: Check if server and database are running
+      responses:
+        200:
+          description: Server status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  server:
+                    type: string
+                    example: "running"
+                  database:
+                    type: string
+                    enum: [connected, disconnected]
+                    example: "connected"

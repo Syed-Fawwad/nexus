@@ -22,6 +22,8 @@ import meetingRoutes from './routes/meetingRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
+import collaborationRoutes from './routes/collaborationRoutes.js';
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -68,17 +70,15 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Prevent MongoDB injection attacks
-// TEMPORARILY DISABLED - Fix compatibility issue
-// app.use(mongoSanitize({
-//   replaceWith: '_',
-//   onSanitize: ({ req, key }) => {
-//     console.warn(`Sanitized key: ${key}`);
-//   },
-// }));
+app.use(mongoSanitize({
+  replaceWith: '_',
+  onSanitize: ({ req, key }) => {
+    console.warn(`[SECURITY] Sanitized MongoDB injection attempt on key: ${key}`);
+  },
+}));
 
 // Prevent XSS attacks
-// TEMPORARILY DISABLED - Fix compatibility issue
-// app.use(xss());
+app.use(xss());
 
 // Apply general API rate limiting
 app.use('/api/', apiLimiter);
@@ -97,6 +97,8 @@ app.use('/api/meetings', meetingRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/collaborations', collaborationRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({

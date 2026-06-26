@@ -21,7 +21,18 @@
       "Bash(timeout 30 npm start)",
       "Bash(findstr \":5173\")",
       "Bash(xargs grep -l \"connectSocket\\\\|io\\(\")",
-      "Bash(grep -v \"import\\\\|export\\\\|//\")"
+      "Bash(grep -v \"import\\\\|export\\\\|//\")",
+      "Bash(node -e ' *)",
+      "Bash(node backend/server.js --help)",
+      "Read(//c/Users/PMLS/Desktop/**)",
+      "Bash(node --check backend/server.js)",
+      "Bash(node --check backend/controllers/dashboardController.js)",
+      "Bash(node --check backend/routes/dashboardRoutes.js)",
+      "Bash(npx tsc *)",
+      "Bash(node --check backend/controllers/collaborationController.js)",
+      "Bash(node --check backend/routes/collaborationRoutes.js)",
+      "Bash(node --check backend/models/CollaborationRequest.js)",
+      "Bash(npx vite *)"
     ]
   }
 }
